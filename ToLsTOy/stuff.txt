@@ -1,0 +1,2 @@
+x.DO_WritePort(0,1,1)
+x=ctypes.windll.LoadLibrary('PCI-Dask')
