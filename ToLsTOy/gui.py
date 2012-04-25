@@ -4,7 +4,7 @@ import tkMessageBox
 import my_control
 
 class MainFrame(Text):    
-    def __init__(self, parent):
+    def __init__(self, parent, control = my_control.Control()):
         scrollbar = Scrollbar(parent)
         Text.__init__(self, parent,bg='grey',yscrollcommand=scrollbar.set)
         parent.title('ToLsTOy - Twenty Led Tower cOntrol')
@@ -26,7 +26,7 @@ class MainFrame(Text):
         self.shock_table.grid(row=1,column=1,sticky=N)
         self.grid(column=0,row=0)
         scrollbar.grid(column=1,row=0)
-        self.control = my_control.Control(self)
+        self.control = control
         
 
     def start_all(self):
@@ -40,10 +40,11 @@ class MainFrame(Text):
 
 class IdleFrame(Frame):
     '''
-    Class modelling the Idle Frame
+    Class modeling the Idle Frame
     '''
     def __init__(self, parent):
         Frame.__init__(self, parent, relief=RIDGE, borderwidth=3)
+        self.parent = parent
         Label(self, text="Idle colors for all", fg="black").grid(row=0)
         Label(self, text="left color:", fg="black",relief=SUNKEN, 
                      borderwidth=1, justify=RIGHT).grid(row=1, column=0, 
@@ -58,6 +59,8 @@ class IdleFrame(Frame):
         self.right_color = Text(self,height=1,width=7)
         self.right_color.insert(END, '000,000')
         self.right_color.grid(row=2, column=1)
+        self.left_color.bind('<Key>',self.key_pressed)
+        self.right_color.bind('<Key>',self.key_pressed)
     
     def get_colors(self):
         '''
@@ -65,9 +68,18 @@ class IdleFrame(Frame):
         returns: ([left_green,left_blue],[right_green,right_blue])
         '''
         # Error checking needed
-        return ([int(e) for e in self.left_color.get(1.0, END)[:7].split(',')],
+        pattern ='\d+,\d+'
+        if re.match(pattern, self.left_color.get(1.0, END)):
+            return ([int(e) for e in self.left_color.get(1.0, END)[:7].split(',')],
                [int(e) for e in self.right_color.get(1.0, END)[:7].split(',')])
-
+        else:
+            return 0
+        
+    def key_pressed(self, event):
+        colors = self.get_colors()
+        if colors:
+            self.parent.control.idle_event(colors)
+            
 class  ProtocolTable(Frame):
     '''
     This class models the Table which describes who the application should 
@@ -138,19 +150,20 @@ class LightTable(ProtocolTable):
                     return False
             # check time line
             if  len(line[2])>1:
-                pattern = '\d+'
+                pattern = '\d+$|\d+\.\d+'
                 value = re.findall(pattern, line[2])
                 if value:
                     value = value[0]
-                    value = int(value)
+                    value = float(value)
                     _tmp_result[1]=int(value)
                 else:
                     tkMessageBox.showerror(
                     'Uh Oh', 'Error in Line %s with column time[ms];#'%line[0]) 
                     return False  
+            
             # check left led line
             if  len(line[3])>1:
-                pattern = '\d{3},\d{3}'
+                pattern = '\d+,\d+'
                 value = re.findall(pattern, line[3])
                 if value:
                     value = value[0]
@@ -160,9 +173,10 @@ class LightTable(ProtocolTable):
                     tkMessageBox.showerror(
                     'Uh Oh', 'Error in Line %s with column G_l,B_l;#'%line[0])
                     return False
+            
             # check right led line
             if  len(line[4])>1:
-                pattern = '\d,\d'
+                pattern = '\d+,\d+'
                 value = re.findall(pattern, line[4])
                 if value:
                     value = value[0]
@@ -195,11 +209,11 @@ class ShockTable(ProtocolTable):
             _tmp_result = [False,False,False]
             # check jmp line
             if  len(line[1])>1:
-                pattern = '\[\d+;\d+\]'
+                pattern = '\d+;\d+'
                 value = re.findall(pattern, line[1])
                 if value:
                     value = value[0]
-                    value = value[1:-1].split(';')
+                    value = value.split(';')
                     _tmp_result[0]=[int(value[0]),int(value[1])]
                 else:
                     tkMessageBox.showerror(
@@ -207,11 +221,11 @@ class ShockTable(ProtocolTable):
                     return False
             # check time line
             if  len(line[2])>1:
-                pattern = '\d+'
+                pattern = '\d+$|\d+\.\d+'
                 value = re.findall(pattern, line[2])
                 if value:
                     value = value[0]
-                    value = int(value)
+                    value = float(value)
                     _tmp_result[1]=int(value)
                 else:
                     tkMessageBox.showerror(
@@ -223,7 +237,7 @@ class ShockTable(ProtocolTable):
                 value = re.findall(pattern, line[3])
                 if value:
                     value = value[0]
-                    _tmp_result[2] = value
+                    _tmp_result[2] = int(value)
                 else:
                     tkMessageBox.showerror(
                     'Uh Oh', 'Error in Line %s with column Intensity;#'%line[0])
