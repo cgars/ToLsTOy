@@ -36,7 +36,7 @@ class LEDTowers:
         The init function will try to initialize the Hadrware 
         it will either set self.io to the identifier bof the initilized card 
         or to a negative value if it failed. This will only work under Windows 
-        though
+        though. To interface between the DASK dll and python we here use ctypes
         '''
         self.current_status = '00000000'
 #        self.io = ctypes.windll.LoadLibrary('PCI-Dask')
@@ -77,40 +77,51 @@ class LEDTowers:
         self.write(LEDTowers.GREEN_LDAC, LEDTowers.GREEN_CS, event.right[0], a1='1', 
                    a0='1')        
     
-    def write(self, ldac_port, cs_port, value, a1='1', a0='1'):
+    def write(self, ldac_port, cs_port, value, a1='1', a0='1',SA='1',SI='1'):
         '''
         Writes a complete Set of intsructions to the Towers
-        ldac_port: Is an integer indictating the ldac port to be used
-        cs_port: Is an integer indictating the cs port to be used
-        value: is the value that sould be given via sdi. it be an 8uint (0-255)
-        a1,a2: Flags inidcating the LEDs to be set. (1,2,3,4 quadrant as bit 
-               pattern. eg a1=0,a2=0 is led1 and a1=1,a2=0 is led2 )
+        ldac_port: Is an integer indicating the ldac port to be used
+        cs_port: Is an integer indicating the cs port to be used
+        value: is the value that should be given via sdi. it be an 8uint (0-255)
+        a1,a2: Flags indicating the LEDs to be set. (1,2,3,4 quadrant as bit 
+               pattern. eg. a1=0,a2=0 is led1 and a1=1,a2=0 is led2 )
         '''
         print value
+        # We start with an 8 char long string wo which we append the binary 
+        # peresenattion of the give intensity. of the combinded string we take 
+        # the last 8 chars
         intensity = '00000000'
         intensity += bin(value)[2:]
         value = intensity[-8:]
+        # initialize before real transmission
         self.current_status = list('00000000')
+        ## LDAC and CS all to high
         self.current_status[7-LEDTowers.LDAC1_PORT] = '1'
         self.current_status[7-LEDTowers.LDAC2_PORT] = '1'
         self.current_status[7-LEDTowers.LDAC3_PORT] = '1'
         self.current_status[7-LEDTowers.CS1_PORT] = '1'
         self.current_status[7-LEDTowers.CS2_PORT] = '1'
         self.current_status[7-LEDTowers.CS3_PORT] = '1'
+        ## CLK starts with 0
         self.current_status[7-LEDTowers.CLK_PORT] = '0'
+        # this seems unnecesary
         self.current_status[7-ldac_port] = '1'
+        # select cable
         self.current_status[7-cs_port%7] = '0'
         self.write_to_port(self.current_status)
+        
         # We send SA and SI first booth need to be high
-        self.__sdi__('1')
-        self.__sdi__('1')
+        self.__sdi__(SA)
+        self.__sdi__(SI)
         # Next we send A1 and A0
         self.__sdi__(a1)
         self.__sdi__(a0)
         # Now we can send the 8 Value bits
         [self.__sdi__(e) for e in value]
+        # unselect cable
         self.current_status[7-cs_port%7] = '1'
         self.write_to_port(self.current_status)
+        # And flip Buffer to
         self.current_status[7-ldac_port] = '0'
         self.write_to_port(self.current_status)
         self.current_status[7-ldac_port] = '1'
@@ -119,8 +130,8 @@ class LEDTowers:
     
     def __sdi__(self, bit):
         '''
-        Helper functions ending out hight or low biut to the sdi port
-        the setting os the bit is fellowed by one clock cycle (ON-OFF)
+        Helper functions ending out high or low biut to the sdi port
+        the setting off the bit is fellowed by one clock cycle (ON-OFF)
         '''
         self.current_status[7-LEDTowers.SDI_PORT] = bit
         self.write_to_port(self.current_status)
@@ -173,8 +184,8 @@ class Control:
                 time.sleep(time_to_next_event)
             else:
                 self.sendEvent(event)
-                
-        print event_list
+        # set current off
+        self.led_towers.write(0, 0, 0, a1='0', a0='0',SA='1',SI='0')
     
     def idle_event(self, colors):
         event = ColorEvent(0, colors[0], colors[1])
