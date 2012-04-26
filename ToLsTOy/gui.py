@@ -59,8 +59,7 @@ class IdleFrame(Frame):
         self.right_color = Text(self,height=1,width=7)
         self.right_color.insert(END, '000,000')
         self.right_color.grid(row=2, column=1)
-        self.left_color.bind('<Key>',self.key_pressed)
-        self.right_color.bind('<Key>',self.key_pressed)
+        self.left_color.bind('<KeyRelease>',self.key_pressed)
     
     def get_colors(self):
         '''
@@ -68,11 +67,13 @@ class IdleFrame(Frame):
         returns: ([left_green,left_blue],[right_green,right_blue])
         '''
         # Error checking needed
-        pattern ='\d+,\d+'
+        pattern ='\d+,\d+$'
         if re.match(pattern, self.left_color.get(1.0, END)):
+            self.config(bg='green')
             return ([int(e) for e in self.left_color.get(1.0, END)[:7].split(',')],
                [int(e) for e in self.right_color.get(1.0, END)[:7].split(',')])
         else:
+            self.config(bg='red')
             return 0
         
     def key_pressed(self, event):
@@ -117,7 +118,9 @@ class  ProtocolTable(Frame):
     def load(self):
         pass
     def save(self):
-        pass
+        data = self.get_all_values()
+        if data:
+            print data
 
 class LightTable(ProtocolTable):
     '''
@@ -125,7 +128,7 @@ class LightTable(ProtocolTable):
     '''
     def __init__(self, parent):
         ProtocolTable.__init__(self, parent,
-                               ['line','[jmp;#]','time[ms]','G_l,B_l','G_r,B_r'],
+                               ['line','jmp,#','time[s]','G_l,B_l','G_r,B_r'],
                                [8,8,8,8,8])    
     def get_all_values(self):
         '''
@@ -138,7 +141,7 @@ class LightTable(ProtocolTable):
             _tmp_result = [False,False,False,False]
             # check jmp line
             if  len(line[1])>1:
-                pattern = 'd+,\d+'
+                pattern = 'd+,\d+$'
                 value = re.findall(pattern, line[1])
                 if value:
                     value = value[0]
@@ -158,7 +161,7 @@ class LightTable(ProtocolTable):
                     _tmp_result[1]=int(value)
                 else:
                     tkMessageBox.showerror(
-                    'Uh Oh', 'Error in Line %s with column time[ms];#'%line[0]) 
+                    'Uh Oh', 'Error in Line %s with column time[s];#'%line[0]) 
                     return False  
             
             # check left led line
@@ -197,7 +200,7 @@ class ShockTable(ProtocolTable):
     '''
     def __init__(self,parent):
         ProtocolTable.__init__(self, parent, 
-                               ['line','[jmp;#]','time[ms]','Intensity'],[8,8,8,8])
+                               ['line','jmp,#','time[s]','Intensity'],[8,8,8,8])
     def get_all_values(self):
         '''
         Evaluate the Lines of the Light Table
@@ -209,15 +212,15 @@ class ShockTable(ProtocolTable):
             _tmp_result = [False,False,False]
             # check jmp line
             if  len(line[1])>1:
-                pattern = '\d+;\d+'
+                pattern = '\d+,\d+$'
                 value = re.findall(pattern, line[1])
                 if value:
                     value = value[0]
-                    value = value.split(';')
+                    value = value.split(',')
                     _tmp_result[0]=[int(value[0]),int(value[1])]
                 else:
                     tkMessageBox.showerror(
-                    'Uh Oh', 'Error in Line %s with column jmp;#'%line[0])
+                    'Uh Oh', 'Error in Line %s with column jmp,#'%line[0])
                     return False
             # check time line
             if  len(line[2])>1:
@@ -229,11 +232,11 @@ class ShockTable(ProtocolTable):
                     _tmp_result[1]=int(value)
                 else:
                     tkMessageBox.showerror(
-                    'Uh Oh', 'Error in Line %s with column time[ms];#'%line[0]) 
+                    'Uh Oh', 'Error in Line %s with column time[s];#'%line[0]) 
                     return False  
             # check shock line
             if  len(line[3])>1:
-                pattern = '\d{3}'
+                pattern = '\d+$'
                 value = re.findall(pattern, line[3])
                 if value:
                     value = value[0]
