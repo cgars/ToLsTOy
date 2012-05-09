@@ -54,6 +54,10 @@ class LEDTowers:
         '''
         self.write(LEDTowers.LDAC3_PORT, LEDTowers.CS3_PORT, event.intensity)
     
+    def reset(self):
+        self.send_light_event(ColorEvent(0,[0,0,0,0],[0,0,0,0]))
+        self.send_shock_event(ShockEvent(0,0))
+    
     def send_light_event(self, event):
         '''
         Interprets the event and send out the correct signals to the Towers        
@@ -163,7 +167,7 @@ class Control(threading.Thread):
         self.last_event_timestamp = 0
         self.led_towers = hardware_abstraction
         self.stop = False
-        self.led_towers.write(0, 0, 0, a1='0', a0='0',SA='0',SI='0')
+        self.led_towers.reset()
         
     def set_values(self, color_protocol, shock_protocol):        
         #=======================================================================
@@ -200,7 +204,7 @@ class Control(threading.Thread):
             else:
                 self.sendEvent(event)
         # set current off
-        self.led_towers.write(0, 0, 0, a1='0', a0='0',SA='0',SI='0')
+        self.led_towers.reset()
         self.gui.thread_done()
         threading.Thread.__init__(self)
     
