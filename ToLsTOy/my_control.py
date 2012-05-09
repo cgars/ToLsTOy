@@ -1,6 +1,6 @@
 import time
-from MySQLdb.constants.FIELD_TYPE import BIT
 import ctypes
+import threading 
 
 class LEDTowers:
     '''
@@ -45,6 +45,7 @@ class LEDTowers:
 #        print 'port config',error
 #        error = self.io.DIO_PortConfig(self.card, 1, 2)
 #        print 'port config', error
+#        self.DO_WritePort = self.io.DO_WritePort
     
     
     def send_shock_event(self, event):
@@ -59,23 +60,23 @@ class LEDTowers:
         '''
         # left side  while we could set each quadrant individually due to 
         # historic reasons we set quadrant 0&2 and 1&3 together
-        self.write(LEDTowers.BLUE_LDAC, LEDTowers.BLUE_CS, event.left[1], a1='0', 
+        self.write(LEDTowers.BLUE_LDAC, LEDTowers.BLUE_CS, event.blue[0], a1='0', 
                    a0='0')
-        self.write(LEDTowers.BLUE_LDAC, LEDTowers.BLUE_CS, event.left[1], a1='1', 
-                   a0='0')
-        self.write(LEDTowers.GREEN_LDAC, LEDTowers.GREEN_CS, event.left[0], a1='0', 
-                   a0='0')
-        self.write(LEDTowers.GREEN_LDAC, LEDTowers.GREEN_CS, event.left[0], a1='1', 
-                   a0='0')
-        # right side
-        self.write(LEDTowers.BLUE_LDAC, LEDTowers.BLUE_CS, event.right[1], a1='0', 
-                   a0='0')
-        self.write(LEDTowers.BLUE_LDAC, LEDTowers.BLUE_CS, event.right[1], a1='1', 
-                   a0='0')
-        self.write(LEDTowers.GREEN_LDAC, LEDTowers.GREEN_CS, event.right[0], a1='0', 
+        self.write(LEDTowers.BLUE_LDAC, LEDTowers.BLUE_CS, event.blue[1], a1='0', 
                    a0='1')
-        self.write(LEDTowers.GREEN_LDAC, LEDTowers.GREEN_CS, event.right[0], a1='1', 
-                   a0='1')        
+        self.write(LEDTowers.BLUE_LDAC, LEDTowers.BLUE_CS, event.blue[2], a1='1', 
+                   a0='0')
+        self.write(LEDTowers.BLUE_LDAC, LEDTowers.BLUE_CS, event.blue[3], a1='1', 
+                   a0='1')
+        
+        self.write(LEDTowers.GREEN_LDAC, LEDTowers.GREEN_CS, event.green[0], a1='0', 
+                   a0='0')
+        self.write(LEDTowers.GREEN_LDAC, LEDTowers.GREEN_CS, event.green[1], a1='0', 
+                   a0='1')  
+        self.write(LEDTowers.GREEN_LDAC, LEDTowers.GREEN_CS, event.green[2], a1='1', 
+                   a0='0')         
+        self.write(LEDTowers.GREEN_LDAC, LEDTowers.GREEN_CS, event.green[3], a1='1', 
+                   a0='1') 
     
     def write(self, ldac_port, cs_port, value, a1='1', a0='1',SA='1',SI='1'):
         '''
@@ -86,7 +87,7 @@ class LEDTowers:
         a1,a2: Flags indicating the LEDs to be set. (1,2,3,4 quadrant as bit 
                pattern. eg. a1=0,a2=0 is led1 and a1=1,a2=0 is led2 )
         '''
-        print value
+        #print value, ldac_port, cs_port
         # We start with an 8 char long string wo which we append the binary 
         # peresenattion of the give intensity. of the combinded string we take 
         # the last 8 chars
@@ -112,7 +113,10 @@ class LEDTowers:
         
         # We send SA and SI first booth need to be high
         self.__sdi__(SA)
-        self.__sdi__(SI)
+        if value > '00000000':
+            self.__sdi__(SI)
+        else:
+            self.__sdi__('0')
         # Next we send A1 and A0
         self.__sdi__(a1)
         self.__sdi__(a0)
@@ -147,17 +151,20 @@ class LEDTowers:
         bins: a list of chars ('1' or '0')with length 8. the list holds the 
         binary 8bit pattern to be written to the io card 
         '''
-        pass
         #print bins, int(''.join(bins), 2)
-        #error = self.io.DO_WritePort(self.card, port, int(''.join(bins), 2));
-        #print error
+#        error = self.io.DO_WritePort(self.card, port, int(''.join(bins), 2));
+#        error = self.DO_WritePort(self.card, port, int(''.join(bins), 2));
+#        print error
 
-class Control:
-    def __init__(self, hardware_abstraction = LEDTowers()):
+class Control(threading.Thread):
+    def __init__(self, gui, hardware_abstraction = LEDTowers()):
+        threading.Thread.__init__(self) 
+        self.gui = gui
         self.last_event_timestamp = 0
         self.led_towers = hardware_abstraction
+        self.stop = False
         
-    def start(self, color_protocol, shock_protocol):        
+    def set_values(self, color_protocol, shock_protocol):        
         #=======================================================================
         # First we cycle through the color protocol and add ColorEvents as 
         # needed into a color event list. After all events have been added we 
@@ -165,27 +172,36 @@ class Control:
         # Events. Then we do the same with the Shock protocol. We then combine
         # both events lists and sort it with respect to timepoints. After that
         # we can execute the events in order of the resulting event list 
-        #=======================================================================
-        color_event_list = self.get_color_event_list(color_protocol)
-        shock_event_list = self.get_shock_event_list(shock_protocol)
-        color_event_list = self.calculate_timepoints(color_event_list)
-        shock_event_list = self.calculate_timepoints(shock_event_list)
-        color_event_list.extend(shock_event_list)
-        event_list = color_event_list
-        event_list.sort()
+        self.color_event_list = self.get_color_event_list(color_protocol)
+        self.shock_event_list = self.get_shock_event_list(shock_protocol)
+        self.color_event_list = self.calculate_timepoints(self.color_event_list)
+        self.shock_event_list = self.calculate_timepoints(self.shock_event_list)
+        self.color_event_list.extend(self.shock_event_list)
+        self.event_list = self.color_event_list
+        self.event_list.sort()
+        self.stop = False
         
         #=======================================================================
         # Now we can really start sending out the events to the towers
         #=======================================================================
-        for counter,event in enumerate(event_list):
-            if counter<len(event_list)-1:
-                time_to_next_event = event_list[counter+1].start - event.start
+        self.start()
+    
+    def run(self):
+        for counter,event in enumerate(self.event_list):
+            if counter<len(self.event_list)-1:
+                if self.stop:
+                    break
+                time_to_next_event = self.event_list[counter+1].start - event.start
+                time1 = time.time()
                 self.sendEvent(event)
+                print 'this event took [s]:', time.time() - time1
                 time.sleep(time_to_next_event)
             else:
                 self.sendEvent(event)
         # set current off
         self.led_towers.write(0, 0, 0, a1='0', a0='0',SA='1',SI='0')
+        self.gui.thread_done()
+        threading.Thread.__init__(self)
     
     def idle_event(self, colors):
         event = ColorEvent(0, colors[0], colors[1])
@@ -196,10 +212,7 @@ class Control:
         Send the Event out to the LED Towers        
         '''      
         if isinstance(event, ShockEvent):
-            time1 = time.time()
             self.led_towers.send_shock_event(event)
-            time2 = time.time()
-            print time2 -time1
         else:
             self.led_towers.send_light_event(event)
     
@@ -265,10 +278,10 @@ class ColorEvent:
     the values to be send to the LED Towers, event duration and a start 
     timepoint when this events shall occur
     '''
-    def __init__(self,duration,left,right):
+    def __init__(self, duration, blue, green):
         self.duration = duration
-        self.left = left
-        self.right = right
+        self.blue = blue
+        self.green = green
         self.start = 0
     
     def __cmp__(self, other):
@@ -279,7 +292,7 @@ class ColorEvent:
         elif self.start > other.start:
             return 1
     def __repr__(self):
-        return str((self.start, self.left, self.right))
+        return str((self.start, self.blue, self.green))
 
 class ShockEvent:
     '''
@@ -301,4 +314,3 @@ class ShockEvent:
             return 1
     def __repr__(self):
         return str((self.start, self.intensity))
-
