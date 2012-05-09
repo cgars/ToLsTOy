@@ -39,13 +39,13 @@ class LEDTowers:
         though. To interface between the DASK dll and python we here use ctypes
         '''
         self.current_status = '00000000'
-#        self.io = ctypes.windll.LoadLibrary('PCI-Dask')
-#        self.card = self.io.Register_Card(9, 0)        
-#        error = self.io.DIO_PortConfig(self.card, 0, 2)
-#        print 'port config',error
-#        error = self.io.DIO_PortConfig(self.card, 1, 2)
-#        print 'port config', error
-#        self.DO_WritePort = self.io.DO_WritePort
+        self.io = ctypes.windll.LoadLibrary('PCI-Dask')
+        self.card = self.io.Register_Card(9, 0)        
+        error = self.io.DIO_PortConfig(self.card, 0, 2)
+        print 'port config',error
+        error = self.io.DIO_PortConfig(self.card, 1, 2)
+        print 'port config', error
+        self.DO_WritePort = self.io.DO_WritePort
     
     
     def send_shock_event(self, event):
@@ -153,7 +153,7 @@ class LEDTowers:
         '''
         #print bins, int(''.join(bins), 2)
 #        error = self.io.DO_WritePort(self.card, port, int(''.join(bins), 2));
-#        error = self.DO_WritePort(self.card, port, int(''.join(bins), 2));
+        error = self.DO_WritePort(self.card, port, int(''.join(bins), 2));
 #        print error
 
 class Control(threading.Thread):
