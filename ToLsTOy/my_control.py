@@ -163,6 +163,7 @@ class Control(threading.Thread):
         self.last_event_timestamp = 0
         self.led_towers = hardware_abstraction
         self.stop = False
+        self.led_towers.write(0, 0, 0, a1='0', a0='0',SA='0',SI='0')
         
     def set_values(self, color_protocol, shock_protocol):        
         #=======================================================================
@@ -199,7 +200,7 @@ class Control(threading.Thread):
             else:
                 self.sendEvent(event)
         # set current off
-        self.led_towers.write(0, 0, 0, a1='0', a0='0',SA='1',SI='0')
+        self.led_towers.write(0, 0, 0, a1='0', a0='0',SA='0',SI='0')
         self.gui.thread_done()
         threading.Thread.__init__(self)
     
