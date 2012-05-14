@@ -112,7 +112,7 @@ class LEDTowers:
         # this seems unnecesary
         self.current_status[7-ldac_port] = '1'
         # select cable
-        self.current_status[7-cs_port%7] = '0'
+        self.current_status[7-cs_port] = '0'
         self.write_to_port(self.current_status)
         
         # We send SA and SI first booth need to be high
@@ -127,7 +127,7 @@ class LEDTowers:
         # Now we can send the 8 Value bits
         [self.__sdi__(e) for e in value]
         # unselect cable
-        self.current_status[7-cs_port%7] = '1'
+        self.current_status[7-cs_port] = '1'
         self.write_to_port(self.current_status)
         # And flip Buffer to
         self.current_status[7-ldac_port] = '0'
