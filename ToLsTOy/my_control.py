@@ -52,7 +52,7 @@ class LEDTowers:
         '''
         send out a the shock event to the Towers
         '''
-        self.write(LEDTowers.LDAC3_PORT, LEDTowers.CS3_PORT, event.intensity)
+        self.write(LEDTowers.LDAC3_PORT, LEDTowers.CS3_PORT, event.intensity, a1='0', a0='0')
     
     def reset(self):
         self.send_light_event(ColorEvent(0,[0,0,0,0],[0,0,0,0]))
@@ -82,7 +82,7 @@ class LEDTowers:
         self.write(LEDTowers.GREEN_LDAC, LEDTowers.GREEN_CS, event.green[3], a1='1', 
                    a0='1') 
     
-    def write(self, ldac_port, cs_port, value, a1='1', a0='1',SA='1',SI='1'):
+    def write(self, ldac_port, cs_port, value, a1='0', a0='0',SA='1',SI='1'):
         '''
         Writes a complete Set of intsructions to the Towers
         ldac_port: Is an integer indicating the ldac port to be used
