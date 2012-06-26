@@ -262,6 +262,7 @@ class ShockTable(ProtocolTable):
         Return the well formatted lines otherwise        
         '''
         result = [e.values for e in self.rows]
+        result = copy.deepcopy(result)
         result.append([False,1,0])
         return result
     
