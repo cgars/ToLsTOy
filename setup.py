@@ -18,5 +18,5 @@ setup(name='ToLsTOy',
       author_email='christian@stuebeweg50.de',
       packages=['ToLsTOy'],
       package_dir={'ToLsTOy': 'ToLsTOy'},
-      package_data={'ToLsTOy': ['PCI-DASK.dll', 'PCI-DASK.lib', 'ColSymb.gif']},
+      package_data={'ToLsTOy': ['PCI-DASK.dll', 'PCI-DASK.lib', 'ColSymb.gif']}, requires=['mock']
      )

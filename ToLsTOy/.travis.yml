@@ -1,0 +1,17 @@
+language: python
+python:
+  - "2.7"
+
+# command to install dependencies
+install: "pip install mock"
+
+before_script:
+  - "export DISPLAY=:99.0"
+  - "sh -e /etc/init.d/xvfb start"
+  - sleep 3 # give xvfb some time to start
+
+# command to run tests
+script: nosetests -v
+
+
+
