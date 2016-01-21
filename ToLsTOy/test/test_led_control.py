@@ -89,7 +89,7 @@ class TestLedControll(unittest.TestCase):
 
     def test_write_to_port(self):
         """
-        Ttest for correct call of the DO_WritePort function
+        Test for correct call of the DO_WritePort function
         """
         self.ctr.write_to_port(['0', '0', '0', '0', '0', '0', '0', '1'])
         self.assertEqual(self.io_mock.DO_WritePort.call_args_list[0][0][2], 1)

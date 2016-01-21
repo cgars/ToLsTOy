@@ -3,7 +3,9 @@ python:
   - "2.7"
 
 # command to install dependencies
-install: "pip install mock"
+install:
+  - "pip install mock"
+  - "pip install coveralls"
 
 before_script:
   - "export DISPLAY=:99.0"
@@ -11,7 +13,10 @@ before_script:
   - sleep 3 # give xvfb some time to start
 
 # command to run tests
-script: nosetests -v
+script: nosetests  -v --with-coverage --cover-package=ToLsTOy
+
+after_success:
+  coveralls
 
 
 

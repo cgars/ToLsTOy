@@ -1,4 +1,4 @@
-[![Codacy Badge](https://api.codacy.com/project/badge/grade/830aad5f799d42e4a92f2384283412a5)](https://www.codacy.com/app/christian_7/ToLsTOy)
+[![Build Status](https://travis-ci.org/cgars/ToLsTOy.svg?branch=master)](https://travis-ci.org/cgars/ToLsTOy)[![Codacy Badge](https://api.codacy.com/project/badge/grade/830aad5f799d42e4a92f2384283412a5)](https://www.codacy.com/app/christian_7/ToLsTOy)
 
 --
 ToLsTOy -  Twenty Led Tower cOntrol
@@ -15,6 +15,7 @@ ToLsTOy has been used for several scientific studies. Among them:
 -------------
 ToLsTOy has been designed to be simple and as free of dependencies as possible. It therefore uses the rather simple
 (and ugly) Tkinter gui tools shipped with python itself.
+
 -------------
 
 ![Image of ToLsTOy](https://github.com/cgars/ToLsTOy/img/gui.png)
