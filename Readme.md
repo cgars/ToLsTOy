@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/cgars/ToLsTOy.svg?branch=master)](https://travis-ci.org/cgars/ToLsTOy)[![Codacy Badge](https://api.codacy.com/project/badge/grade/830aad5f799d42e4a92f2384283412a5)](https://www.codacy.com/app/christian_7/ToLsTOy)
+[![Coverage Status](https://coveralls.io/repos/github/cgars/ToLsTOy/badge.svg?branch=master)](https://coveralls.io/github/cgars/ToLsTOy?branch=master)[![Build Status](https://travis-ci.org/cgars/ToLsTOy.svg?branch=master)](https://travis-ci.org/cgars/ToLsTOy)[![Codacy Badge](https://api.codacy.com/project/badge/grade/830aad5f799d42e4a92f2384283412a5)](https://www.codacy.com/app/christian_7/ToLsTOy)
 
 --
 ToLsTOy -  Twenty Led Tower cOntrol
@@ -18,5 +18,5 @@ ToLsTOy has been designed to be simple and as free of dependencies as possible. 
 
 -------------
 
-![Image of ToLsTOy](https://github.com/cgars/ToLsTOy/img/gui.png)
+![Image of ToLsTOy](https://github.com/cgars/ToLsTOy/blob/master/img/gui.png)
 
