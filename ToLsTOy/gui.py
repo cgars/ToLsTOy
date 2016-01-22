@@ -12,7 +12,6 @@ import re
 import tkFileDialog
 import copy
 import os
-from twisted.python.win32 import WindowsError
 
 import led_control
 
@@ -346,7 +345,7 @@ if __name__ == '__main__':
     root = Tk()
     try:
         io = ctypes.windll.LoadLibrary('PCI-Dask')
-    except(AttributeError, WindowsError):
+    except(AttributeError, OSError):
         io = mock.MagicMock()
         tkMessageBox.showwarning("Hardware Error",
                                  "Could not initialize Hardware - Switched to Simulation mode"
