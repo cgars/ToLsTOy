@@ -12,6 +12,7 @@ import re
 import tkFileDialog
 import copy
 import os
+from twisted.python.win32 import WindowsError
 
 import led_control
 
@@ -337,16 +338,20 @@ class dummy:
 
 
 if __name__ == '__main__':
-    import platform
     import mock
     import ctypes
-
     io = False
-    if platform.system() == 'Windows':
-        io = ctypes.windll.LoadLibrary('PCI-Dask')
-    else:
-        io = mock.MagicMock()
-    control = led_control.Control(led_control.LEDTowers(io))
+    import tkMessageBox
+
     root = Tk()
+    try:
+        io = ctypes.windll.LoadLibrary('PCI-Dask')
+    except(AttributeError, WindowsError):
+        io = mock.MagicMock()
+        tkMessageBox.showwarning("Hardware Error",
+                                 "Could not initialize Hardware - Switched to Simulation mode"
+                                 )
+
+    control = led_control.Control(led_control.LEDTowers(io))
     app = MainFrame(root, control)
     root.mainloop()
