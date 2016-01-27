@@ -184,3 +184,28 @@ class TestShockTable(unittest.TestCase):
         TestShockTable.shock_table.rows[0].texts[2].delete(1., END)
         TestShockTable.shock_table.text_field_change(event)
         self.assertEqual(TestShockTable.shock_table.rows[0].texts[2].cget('bg'), 'white')
+
+    def test_xb_save(self):
+        """
+        Data from the schock tabel needs to be correctly written
+        """
+        file_diag_mock = mock.MagicMock()
+        with mock.patch('tkFileDialog.asksaveasfile', file_diag_mock):
+            TestShockTable.shock_table.save()
+            writes = [e[1] for e in file_diag_mock.mock_calls[1:]]
+            self.assertEqual(len(writes), 20)
+
+    def test_xa_load(self):
+        """
+        Data needs to be loaded correctly
+        """
+        _txt = 'False\t5.0\t20\tFalse\t\n[0, 10]\tFalse\tFalse\tFalse\t\nFalse\t10.0\t58\tFalse\t\n'
+        file_diag_mock = mock.mock_open(read_data=_txt)
+        file_diag_mock.return_value.readlines.return_value = _txt.split('\n')
+        with mock.patch('tkFileDialog.askopenfile', file_diag_mock):
+            TestShockTable.shock_table.load()
+            self.assertEqual(len(file_diag_mock.mock_calls), 2)
+
+
+if __name__ == '__main__':
+    unittest.main()
